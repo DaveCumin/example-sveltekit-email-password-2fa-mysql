@@ -25,12 +25,12 @@ export async function load(event: RequestEvent) {
 	if (event.locals.session === null || event.locals.user === null) {
 		return redirect(302, "/login");
 	}
-	if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
+	/*if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
 		return redirect(302, "/2fa");
-	}
+	}*/
 	let recoveryCode: string | null = null;
 	if (event.locals.user.registered2FA) {
-		recoveryCode = getUserRecoverCode(event.locals.user.id);
+		recoveryCode = await getUserRecoverCode(event.locals.user.id);
 	}
 	return {
 		recoveryCode,
@@ -93,7 +93,7 @@ async function updatePasswordAction(event: RequestEvent) {
 		});
 	}
 
-	const passwordHash = getUserPasswordHash(event.locals.user.id);
+	const passwordHash = await getUserPasswordHash(event.locals.user.id);
 	const validPassword = await verifyPasswordHash(passwordHash, password);
 	if (!validPassword) {
 		return fail(400, {
@@ -103,14 +103,14 @@ async function updatePasswordAction(event: RequestEvent) {
 		});
 	}
 	passwordUpdateBucket.reset(event.locals.session.id);
-	invalidateUserSessions(event.locals.user.id);
+	await invalidateUserSessions(event.locals.user.id);
 	await updateUserPassword(event.locals.user.id, newPassword);
 
 	const sessionToken = generateSessionToken();
 	const sessionFlags: SessionFlags = {
 		twoFactorVerified: event.locals.session.twoFactorVerified
 	};
-	const session = createSession(sessionToken, event.locals.user.id, sessionFlags);
+	const session = await createSession(sessionToken, event.locals.user.id, sessionFlags);
 	setSessionTokenCookie(event, sessionToken, session.expiresAt);
 	return {
 		password: {
@@ -165,7 +165,7 @@ async function updateEmailAction(event: RequestEvent) {
 			}
 		});
 	}
-	const emailAvailable = checkEmailAvailability(email);
+	const emailAvailable = await checkEmailAvailability(email);
 	if (!emailAvailable) {
 		return fail(400, {
 			email: {
@@ -180,7 +180,7 @@ async function updateEmailAction(event: RequestEvent) {
 			}
 		});
 	}
-	const verificationRequest = createEmailVerificationRequest(event.locals.user.id, email);
+	const verificationRequest = await createEmailVerificationRequest(event.locals.user.id, email);
 	sendVerificationEmail(verificationRequest.email, verificationRequest.code);
 	setEmailVerificationRequestCookie(event, verificationRequest);
 	return redirect(302, "/verify-email");

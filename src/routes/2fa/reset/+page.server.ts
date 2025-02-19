@@ -57,7 +57,7 @@ async function action(event: RequestEvent) {
 			message: "Too many requests"
 		});
 	}
-	const valid = resetUser2FAWithRecoveryCode(event.locals.user.id, code);
+	const valid = await resetUser2FAWithRecoveryCode(event.locals.user.id, code);
 	if (!valid) {
 		return fail(400, {
 			message: "Invalid recovery code"

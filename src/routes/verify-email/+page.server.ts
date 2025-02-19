@@ -18,13 +18,13 @@ export async function load(event: RequestEvent) {
 	if (event.locals.user === null) {
 		return redirect(302, "/login");
 	}
-	let verificationRequest = getUserEmailVerificationRequestFromRequest(event);
+	let verificationRequest = await getUserEmailVerificationRequestFromRequest(event);
 	if (verificationRequest === null || Date.now() >= verificationRequest.expiresAt.getTime()) {
 		if (event.locals.user.emailVerified) {
 			return redirect(302, "/");
 		}
 		// Note: We don't need rate limiting since it takes time before requests expire
-		verificationRequest = createEmailVerificationRequest(event.locals.user.id, event.locals.user.email);
+		verificationRequest = await createEmailVerificationRequest(event.locals.user.id, event.locals.user.email);
 		sendVerificationEmail(verificationRequest.email, verificationRequest.code);
 		setEmailVerificationRequestCookie(event, verificationRequest);
 	}
@@ -63,7 +63,7 @@ async function verifyCode(event: RequestEvent) {
 		});
 	}
 
-	let verificationRequest = getUserEmailVerificationRequestFromRequest(event);
+	let verificationRequest = await getUserEmailVerificationRequestFromRequest(event);
 	if (verificationRequest === null) {
 		return fail(401, {
 			verify: {
@@ -95,7 +95,7 @@ async function verifyCode(event: RequestEvent) {
 		});
 	}
 	if (Date.now() >= verificationRequest.expiresAt.getTime()) {
-		verificationRequest = createEmailVerificationRequest(verificationRequest.userId, verificationRequest.email);
+		verificationRequest = await createEmailVerificationRequest(verificationRequest.userId, verificationRequest.email);
 		sendVerificationEmail(verificationRequest.email, verificationRequest.code);
 		return {
 			verify: {
@@ -110,13 +110,13 @@ async function verifyCode(event: RequestEvent) {
 			}
 		});
 	}
-	deleteUserEmailVerificationRequest(event.locals.user.id);
-	invalidateUserPasswordResetSessions(event.locals.user.id);
-	updateUserEmailAndSetEmailAsVerified(event.locals.user.id, verificationRequest.email);
+	await deleteUserEmailVerificationRequest(event.locals.user.id);
+	await invalidateUserPasswordResetSessions(event.locals.user.id);
+	await updateUserEmailAndSetEmailAsVerified(event.locals.user.id, verificationRequest.email);
 	deleteEmailVerificationRequestCookie(event);
-	if (!event.locals.user.registered2FA) {
+	/*if (!event.locals.user.registered2FA) {
 		return redirect(302, "/2fa/setup");
-	}
+	}*/
 	return redirect(302, "/");
 }
 
@@ -143,7 +143,7 @@ async function resendEmail(event: RequestEvent) {
 		});
 	}
 
-	let verificationRequest = getUserEmailVerificationRequestFromRequest(event);
+	let verificationRequest = await getUserEmailVerificationRequestFromRequest(event);
 	if (verificationRequest === null) {
 		if (event.locals.user.emailVerified) {
 			return fail(403, {
@@ -159,7 +159,7 @@ async function resendEmail(event: RequestEvent) {
 				}
 			});
 		}
-		verificationRequest = createEmailVerificationRequest(event.locals.user.id, event.locals.user.email);
+		verificationRequest = await createEmailVerificationRequest(event.locals.user.id, event.locals.user.email);
 	} else {
 		if (!sendVerificationEmailBucket.consume(event.locals.user.id, 1)) {
 			return fail(429, {
@@ -168,7 +168,7 @@ async function resendEmail(event: RequestEvent) {
 				}
 			});
 		}
-		verificationRequest = createEmailVerificationRequest(event.locals.user.id, verificationRequest.email);
+		verificationRequest = await createEmailVerificationRequest(event.locals.user.id, verificationRequest.email);
 	}
 	sendVerificationEmail(verificationRequest.email, verificationRequest.code);
 	setEmailVerificationRequestCookie(event, verificationRequest);

@@ -11,7 +11,7 @@ import type { Actions, RequestEvent } from "./$types";
 const bucket = new ExpiringTokenBucket<number>(5, 60 * 30);
 
 export async function load(event: RequestEvent) {
-	const { session } = validatePasswordResetSessionRequest(event);
+	const { session } = await validatePasswordResetSessionRequest(event);
 	if (session === null) {
 		return redirect(302, "/forgot-password");
 	}
@@ -31,7 +31,7 @@ export const actions: Actions = {
 };
 
 async function action(event: RequestEvent) {
-	const { session } = validatePasswordResetSessionRequest(event);
+	const { session } = await validatePasswordResetSessionRequest(event);
 	if (session === null) {
 		return fail(401, {
 			message: "Not authenticated"
@@ -69,8 +69,8 @@ async function action(event: RequestEvent) {
 		});
 	}
 	bucket.reset(session.userId);
-	setPasswordResetSessionAsEmailVerified(session.id);
-	const emailMatches = setUserAsEmailVerifiedIfEmailMatches(session.userId, session.email);
+	await setPasswordResetSessionAsEmailVerified(session.id);
+	const emailMatches = await setUserAsEmailVerifiedIfEmailMatches(session.userId, session.email);
 	if (!emailMatches) {
 		return fail(400, {
 			message: "Please restart the process"

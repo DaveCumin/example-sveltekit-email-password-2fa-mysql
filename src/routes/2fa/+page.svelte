@@ -3,11 +3,16 @@
 
 	import type { ActionData } from "./$types";
 
-	export let form: ActionData;
+	interface Props {
+		form: ActionData;
+		data: PageData;
+	}
+
+	let { form, data }: Props = $props();
 </script>
 
 <h1>Two-factor authentication</h1>
-<p>Enter the code from your authenticator app.</p>
+<p>{data.user.username}, please enter the code from your authenticator app.</p>
 <form method="post" use:enhance>
 	<label for="form-totp.code">Code</label>
 	<input id="form-totp.code" name="code" autocomplete="one-time-code" required /><br />

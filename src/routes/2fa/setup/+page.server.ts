@@ -100,6 +100,6 @@ async function action(event: RequestEvent) {
 		});
 	}
 	updateUserTOTPKey(event.locals.session.userId, key);
-	setSessionAs2FAVerified(event.locals.session.id);
-	return redirect(302, "/recovery-code");
+	await setSessionAs2FAVerified(event.locals.session.id);
+	return redirect(302, "/dashboard");
 }

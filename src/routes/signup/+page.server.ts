@@ -71,7 +71,7 @@ async function action(event: RequestEvent) {
 			username
 		});
 	}
-	const emailAvailable = checkEmailAvailability(email);
+	const emailAvailable = await checkEmailAvailability(email);
 	if (!emailAvailable) {
 		return fail(400, {
 			message: "Email is already used",
@@ -102,7 +102,7 @@ async function action(event: RequestEvent) {
 		});
 	}
 	const user = await createUser(email, username, password);
-	const emailVerificationRequest = createEmailVerificationRequest(user.id, user.email);
+	const emailVerificationRequest = await createEmailVerificationRequest(user.id, user.email);
 	sendVerificationEmail(emailVerificationRequest.email, emailVerificationRequest.code);
 	setEmailVerificationRequestCookie(event, emailVerificationRequest);
 
@@ -110,7 +110,7 @@ async function action(event: RequestEvent) {
 		twoFactorVerified: false
 	};
 	const sessionToken = generateSessionToken();
-	const session = createSession(sessionToken, user.id, sessionFlags);
+	const session = await createSession(sessionToken, user.id, sessionFlags);
 	setSessionTokenCookie(event, sessionToken, session.expiresAt);
-	throw redirect(302, "/2fa/setup");
+	throw redirect(302, "/"); //"/2fa/setup");
 }

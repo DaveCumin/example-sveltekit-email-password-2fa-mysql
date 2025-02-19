@@ -1,29 +1,29 @@
 import { generateRandomOTP } from "./utils";
-import { db } from "./db";
+import { db } from "$lib/server/db";
+import { sql } from "drizzle-orm";
 import { ExpiringTokenBucket } from "./rate-limit";
 import { encodeBase32 } from "@oslojs/encoding";
 
 import type { RequestEvent } from "@sveltejs/kit";
 
-export function getUserEmailVerificationRequest(userId: number, id: string): EmailVerificationRequest | null {
-	const row = db.queryOne(
-		"SELECT id, user_id, code, email, expires_at FROM email_verification_request WHERE id = ? AND user_id = ?",
-		[id, userId]
-	);
-	if (row === null) {
+export async function getUserEmailVerificationRequest(userId: number, id: string): EmailVerificationRequest | null {
+	const rows = await db.execute(sql`
+		SELECT id, user_id, code, email, expires_at FROM email_verification_request WHERE id = ${id} AND user_id = ${userId}`);
+	const row = rows[0];
+	if ((row === null) | (row.length === 0)) {
 		return row;
 	}
 	const request: EmailVerificationRequest = {
-		id: row.string(0),
-		userId: row.number(1),
-		code: row.string(2),
-		email: row.string(3),
-		expiresAt: new Date(row.number(4) * 1000)
+		id: row[0].id,
+		userId: row[0].userId,
+		code: row[0].code,
+		email: row[0].email,
+		expiresAt: new Date(row[0].expires_at * 1000)
 	};
 	return request;
 }
 
-export function createEmailVerificationRequest(userId: number, email: string): EmailVerificationRequest {
+export async function createEmailVerificationRequest(userId: number, email: string): EmailVerificationRequest {
 	deleteUserEmailVerificationRequest(userId);
 	const idBytes = new Uint8Array(20);
 	crypto.getRandomValues(idBytes);
@@ -31,10 +31,8 @@ export function createEmailVerificationRequest(userId: number, email: string): E
 
 	const code = generateRandomOTP();
 	const expiresAt = new Date(Date.now() + 1000 * 60 * 10);
-	db.queryOne(
-		"INSERT INTO email_verification_request (id, user_id, code, email, expires_at) VALUES (?, ?, ?, ?, ?) RETURNING id",
-		[id, userId, code, email, Math.floor(expiresAt.getTime() / 1000)]
-	);
+	await db.execute(sql`
+		INSERT INTO email_verification_request (id, user_id, code, email, expires_at) VALUES (${id}, ${userId}, ${code}, ${email}, ${Math.floor(expiresAt.getTime() / 1000)})`);
 
 	const request: EmailVerificationRequest = {
 		id,
@@ -46,8 +44,8 @@ export function createEmailVerificationRequest(userId: number, email: string): E
 	return request;
 }
 
-export function deleteUserEmailVerificationRequest(userId: number): void {
-	db.execute("DELETE FROM email_verification_request WHERE user_id = ?", [userId]);
+export async function deleteUserEmailVerificationRequest(userId: number): void {
+	await db.execute(sql`DELETE FROM email_verification_request WHERE user_id = ${userId}`);
 }
 
 export function sendVerificationEmail(email: string, code: string): void {
@@ -74,7 +72,7 @@ export function deleteEmailVerificationRequestCookie(event: RequestEvent): void 
 	});
 }
 
-export function getUserEmailVerificationRequestFromRequest(event: RequestEvent): EmailVerificationRequest | null {
+export async function getUserEmailVerificationRequestFromRequest(event: RequestEvent): EmailVerificationRequest | null {
 	if (event.locals.user === null) {
 		return null;
 	}
@@ -82,7 +80,7 @@ export function getUserEmailVerificationRequestFromRequest(event: RequestEvent):
 	if (id === null) {
 		return null;
 	}
-	const request = getUserEmailVerificationRequest(event.locals.user.id, id);
+	const request = await getUserEmailVerificationRequest(event.locals.user.id, id);
 	if (request === null) {
 		deleteEmailVerificationRequestCookie(event);
 	}

@@ -1,57 +1,57 @@
-import { db } from "./db";
+import { db } from "$lib/server/db";
+import { sql } from "drizzle-orm";
 import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from "@oslojs/encoding";
 import { sha256 } from "@oslojs/crypto/sha2";
 
 import type { User } from "./user";
 import type { RequestEvent } from "@sveltejs/kit";
 
-export function validateSessionToken(token: string): SessionValidationResult {
+export async function validateSessionToken(token: string): SessionValidationResult {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
-	const row = db.queryOne(
-		`
-SELECT session.id, session.user_id, session.expires_at, session.two_factor_verified, user.id, user.email, user.username, user.email_verified, IIF(user.totp_key IS NOT NULL, 1, 0) FROM session
+	const rows = await db.execute(sql`
+SELECT session.id, session.user_id, session.expires_at, session.two_factor_verified, user.id, user.email, user.username, user.email_verified, user.totp_key FROM session
 INNER JOIN user ON session.user_id = user.id
-WHERE session.id = ?
-`,
-		[sessionId]
-	);
+WHERE session.id = ${sessionId} 
+`);
 
-	if (row === null) {
+	const row = rows[0];
+	if (row === null || row.length === 0) {
 		return { session: null, user: null };
 	}
+
 	const session: Session = {
-		id: row.string(0),
-		userId: row.number(1),
-		expiresAt: new Date(row.number(2) * 1000),
-		twoFactorVerified: Boolean(row.number(3))
+		id: row[0].id,
+		userId: row[0].user_id,
+		expiresAt: new Date(row[0].expires_at * 1000),
+		twoFactorVerified: Boolean(row[0].totp_key != null)
 	};
 	const user: User = {
-		id: row.number(4),
-		email: row.string(5),
-		username: row.string(6),
-		emailVerified: Boolean(row.number(7)),
-		registered2FA: Boolean(row.number(8))
+		id: row[0].user_id,
+		email: row[0].email,
+		username: row[0].username,
+		emailVerified: Boolean(row[0].email_verified),
+		registered2FA: Boolean(row[0].totp_key != null)
 	};
+
 	if (Date.now() >= session.expiresAt.getTime()) {
-		db.execute("DELETE FROM session WHERE id = ?", [session.id]);
+		await db.execute(sql`DELETE FROM session WHERE id = ${session.id}`);
 		return { session: null, user: null };
 	}
 	if (Date.now() >= session.expiresAt.getTime() - 1000 * 60 * 60 * 24 * 15) {
 		session.expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
-		db.execute("UPDATE session SET expires_at = ? WHERE session.id = ?", [
-			Math.floor(session.expiresAt.getTime() / 1000),
-			session.id
-		]);
+		await db.execute(
+			sql`UPDATE session SET expires_at = ${Math.floor(session.expiresAt.getTime() / 1000)} WHERE session.id = ${session.id}`
+		);
 	}
 	return { session, user };
 }
 
-export function invalidateSession(sessionId: string): void {
-	db.execute("DELETE FROM session WHERE id = ?", [sessionId]);
+export async function invalidateSession(sessionId: string): void {
+	await db.execute(sql`DELETE FROM session WHERE id = ${sessionId}`);
 }
 
-export function invalidateUserSessions(userId: number): void {
-	db.execute("DELETE FROM session WHERE user_id = ?", [userId]);
+export async function invalidateUserSessions(userId: number): void {
+	await db.execute(sql`DELETE FROM session WHERE user_id = ${userId}`);
 }
 
 export function setSessionTokenCookie(event: RequestEvent, token: string, expiresAt: Date): void {
@@ -81,7 +81,7 @@ export function generateSessionToken(): string {
 	return token;
 }
 
-export function createSession(token: string, userId: number, flags: SessionFlags): Session {
+export async function createSession(token: string, userId: number, flags: SessionFlags): Session {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 	const session: Session = {
 		id: sessionId,
@@ -89,17 +89,14 @@ export function createSession(token: string, userId: number, flags: SessionFlags
 		expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
 		twoFactorVerified: flags.twoFactorVerified
 	};
-	db.execute("INSERT INTO session (id, user_id, expires_at, two_factor_verified) VALUES (?, ?, ?, ?)", [
-		session.id,
-		session.userId,
-		Math.floor(session.expiresAt.getTime() / 1000),
-		Number(session.twoFactorVerified)
-	]);
+	await db.execute(
+		sql`INSERT INTO session (id, user_id, expires_at, two_factor_verified) VALUES (${session.id}, ${session.userId}, ${Math.floor(session.expiresAt.getTime() / 1000)}, ${Number(session.twoFactorVerified)})`
+	);
 	return session;
 }
 
-export function setSessionAs2FAVerified(sessionId: string): void {
-	db.execute("UPDATE session SET two_factor_verified = 1 WHERE id = ?", [sessionId]);
+export async function setSessionAs2FAVerified(sessionId: string): void {
+	await db.execute(sql`UPDATE session SET two_factor_verified = 1 WHERE id = ${sessionId}`);
 }
 
 export interface SessionFlags {

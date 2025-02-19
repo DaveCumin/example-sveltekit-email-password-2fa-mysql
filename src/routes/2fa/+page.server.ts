@@ -17,9 +17,9 @@ export async function load(event: RequestEvent) {
 		return redirect(302, "/2fa/setup");
 	}
 	if (event.locals.session.twoFactorVerified) {
-		return redirect(302, "/");
+		return redirect(302, "/dashboard");
 	}
-	return {};
+	return { user: event.locals.user };
 }
 
 export const actions: Actions = {
@@ -72,6 +72,6 @@ async function action(event: RequestEvent) {
 		});
 	}
 	totpBucket.reset(event.locals.user.id);
-	setSessionAs2FAVerified(event.locals.session.id);
-	return redirect(302, "/");
+	await setSessionAs2FAVerified(event.locals.session.id);
+	return { user: event.locals.user };
 }

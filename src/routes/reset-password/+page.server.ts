@@ -17,16 +17,16 @@ import type { Actions, RequestEvent } from "./$types";
 import type { SessionFlags } from "$lib/server/session";
 
 export async function load(event: RequestEvent) {
-	const { session, user } = validatePasswordResetSessionRequest(event);
+	const { session, user } = await validatePasswordResetSessionRequest(event);
 	if (session === null) {
 		return redirect(302, "/forgot-password");
 	}
 	if (!session.emailVerified) {
 		return redirect(302, "/reset-password/verify-email");
 	}
-	if (user.registered2FA && !session.twoFactorVerified) {
+	/*if (user.registered2FA && !session.twoFactorVerified) {
 		return redirect(302, "/reset-password/2fa");
-	}
+	}*/
 	return {};
 }
 
@@ -35,7 +35,7 @@ export const actions: Actions = {
 };
 
 async function action(event: RequestEvent) {
-	const { session: passwordResetSession, user } = validatePasswordResetSessionRequest(event);
+	const { session: passwordResetSession, user } = await validatePasswordResetSessionRequest(event);
 	if (passwordResetSession === null) {
 		return fail(401, {
 			message: "Not authenticated"
@@ -65,15 +65,15 @@ async function action(event: RequestEvent) {
 			message: "Weak password"
 		});
 	}
-	invalidateUserPasswordResetSessions(passwordResetSession.userId);
-	invalidateUserSessions(passwordResetSession.userId);
+	await invalidateUserPasswordResetSessions(passwordResetSession.userId);
+	await invalidateUserSessions(passwordResetSession.userId);
 	await updateUserPassword(passwordResetSession.userId, password);
 
 	const sessionFlags: SessionFlags = {
 		twoFactorVerified: passwordResetSession.twoFactorVerified
 	};
 	const sessionToken = generateSessionToken();
-	const session = createSession(sessionToken, user.id, sessionFlags);
+	const session = await createSession(sessionToken, user.id, sessionFlags);
 	setSessionTokenCookie(event, sessionToken, session.expiresAt);
 	deletePasswordResetSessionTokenCookie(event);
 	return redirect(302, "/");
