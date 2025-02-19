@@ -2,6 +2,8 @@
 
 Built with MySQL (as opposed to the sqlite version at https://github.com/lucia-auth/example-sveltekit-email-password-2fa).
 
+Migrated to Sevlte 5.
+
 - Password check with HaveIBeenPwned
 - Email verification
 - 2FA with TOTP
@@ -39,7 +41,7 @@ pnpm run db:push
 pnpm dev
 ```
 
-## Notes
+## Notes (from Lucia team)
 
 - We do not consider user enumeration to be a real vulnerability so please don't open issues on it. If you really need to prevent it, just don't use emails.
 - This example does not handle unexpected errors gracefully.
