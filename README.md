@@ -1,6 +1,6 @@
 # Email and password example with 2FA in SvelteKit
 
-Built with SQLite.
+Built with MySQL (as opposed to the sqlite version at https://github.com/lucia-auth/example-sveltekit-email-password-2fa).
 
 - Password check with HaveIBeenPwned
 - Email verification
