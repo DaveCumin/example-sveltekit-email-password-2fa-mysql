@@ -13,12 +13,6 @@ Emails are just logged to the console. Rate limiting is implemented using JavaSc
 
 ## Initialize project
 
-Create `sqlite.db` and run `setup.sql`.
-
-```
-sqlite3 sqlite.db
-```
-
 Create a .env file. Generate a 128 bit (16 byte) string, base64 encode it, and set it as `ENCRYPTION_KEY`.
 
 ```bash
@@ -31,10 +25,17 @@ ENCRYPTION_KEY="L9pmqRJnO1ZJSQ2svbHuBA=="
 > openssl rand --base64 16
 > ```
 
-Install dependencies and run the application:
+Also add url for the MySQL database
+
+```bash
+USER_DATABASE_URL="mysql://USERNAME:PASSWORD@sHOST:PORT/DATABASE"
+```
+
+Install dependencies, push the database using Drizzle and run the application:
 
 ```
 pnpm i
+pnpm run db:push
 pnpm dev
 ```
 
