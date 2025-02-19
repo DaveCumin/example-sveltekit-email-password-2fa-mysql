@@ -27,29 +27,44 @@ export async function createPasswordResetSession(token: string, userId: number, 
 export async function validatePasswordResetSessionToken(token: string): PasswordResetSessionValidationResult {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 	const rows = await db.execute(sql`
-		SELECT password_reset_session.id, password_reset_session.user_id, password_reset_session.email, password_reset_session.code, password_reset_session.expires_at, password_reset_session.email_verified, password_reset_session.two_factor_verified,
-user.id, user.email, user.username, user.email_verified, user.totp_key, 1, 0)
-FROM password_reset_session INNER JOIN user ON user.id = password_reset_session.user_id
-WHERE password_reset_session.id = ${sessionId}`);
+		SELECT 
+			password_reset_session.id AS session_id, 
+			password_reset_session.user_id, 
+			password_reset_session.email AS session_email, 
+			password_reset_session.code, 
+			password_reset_session.expires_at, 
+			password_reset_session.email_verified AS session_email_verified, 
+			password_reset_session.two_factor_verified AS session_two_factor_verified,
+			user.id AS user_id, 
+			user.email AS user_email, 
+			user.username, 
+			user.email_verified AS user_email_verified, 
+			user.totp_key 
+		FROM password_reset_session 
+		INNER JOIN user ON user.id = password_reset_session.user_id
+		WHERE password_reset_session.id = ${sessionId}
+	`);
+
 	const row = rows[0];
 	if ((row === null) | (row.length === 0)) {
 		return { session: null, user: null };
 	}
+	console.log(row);
 	const session: PasswordResetSession = {
-		id: row[0].id,
-		userId: row[0].user.id,
-		email: row[0].email,
+		id: row[0].session_id,
+		userId: row[0].user_id,
+		email: row[0].session_email,
 		code: row[0].code,
-		expiresAt: new Date(row[0].password_reset_session.expires_at * 1000),
-		emailVerified: Boolean(row[0].password_reset_session.email_verified),
-		twoFactorVerified: Boolean(row[0].password_reset_session.two_factor_verified)
+		expiresAt: new Date(row[0].expires_at * 1000),
+		emailVerified: Boolean(row[0].session_email_verified),
+		twoFactorVerified: Boolean(row[0].session_two_factor_verified)
 	};
 	const user: User = {
-		id: row[0].user.id,
-		email: row[0].user.email,
-		username: user.username,
-		emailVerified: Boolean(row[0].user.email_verified),
-		registered2FA: Boolean(row[0].user.totp_key != null)
+		id: row[0].user_id,
+		email: row[0].user_email,
+		username: row[0].username,
+		emailVerified: Boolean(row[0].user_email_verified),
+		registered2FA: Boolean(row[0].totp_key != null)
 	};
 	if (Date.now() >= session.expiresAt.getTime()) {
 		await db.execute(sql`DELETE FROM password_reset_session WHERE id = ${session.id}`);

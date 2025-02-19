@@ -26,5 +26,4 @@
 	<button>Continue</button>
 	<p>{form?.message ?? ""}</p>
 </form>
-<a href="/signup">Create an account</a>
 <a href="/forgot-password">Forgot password?</a>

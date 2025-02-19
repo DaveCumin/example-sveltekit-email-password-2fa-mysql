@@ -34,5 +34,5 @@ export async function resetUser2FAWithRecoveryCode(userId: number, recoveryCode:
 		sql`UPDATE user SET recovery_code = ${sql.raw("x'" + encryptedNewRecoveryCodeBuffer.toString("hex") + "'")}, totp_key = NULL WHERE id = ${userId} AND recovery_code = ${userRecoveryCode}`
 	);
 
-	return result.changes > 0;
+	return result[0].affectedRows > 0;
 }

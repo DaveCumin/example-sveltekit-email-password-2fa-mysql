@@ -46,7 +46,7 @@ export async function updateUserEmailAndSetEmailAsVerified(userId: number, email
 
 export async function setUserAsEmailVerifiedIfEmailMatches(userId: number, email: string): boolean {
 	const result = await db.execute(sql`UPDATE user SET email_verified = 1 WHERE id = ${userId} AND email = ${email}`);
-	return result.changes > 0;
+	return result[0].affectedRows > 0;
 }
 
 export async function getUserPasswordHash(userId: number): string {
