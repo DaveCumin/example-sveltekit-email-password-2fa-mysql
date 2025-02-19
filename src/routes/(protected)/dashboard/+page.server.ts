@@ -4,8 +4,6 @@ import { deleteSessionTokenCookie, invalidateSession } from "$lib/server/session
 import type { Actions, PageServerLoadEvent, RequestEvent } from "./$types";
 
 export function load(event: PageServerLoadEvent) {
-	console.log("-- loading dash user", event.locals.user);
-	console.log("-- loading dash session", event.locals.session);
 	if (event.locals.session === null || event.locals.user === null) {
 		return redirect(302, "/login");
 	}

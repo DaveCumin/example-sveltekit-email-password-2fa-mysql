@@ -8,7 +8,7 @@ export const user = mysqlTable(
 		username: varchar("username", { length: 255 }).notNull(),
 		passwordHash: varchar("password_hash", { length: 255 }).notNull(),
 		emailVerified: int("email_verified").notNull().default(0),
-		totpKey: binary("totp_key", { length: 32 }), // Define expected size
+		totpKey: binary("totp_key", { length: 64 }), // Define expected size
 		recoveryCode: binary("recovery_code", { length: 64 }).notNull() // Define expected size
 	},
 	(table) => ({

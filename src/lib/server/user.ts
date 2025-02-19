@@ -19,7 +19,6 @@ export async function createUser(email: string, username: string, password: stri
 	crypto.getRandomValues(idBytes);
 	const id = encodeBase32(idBytes).toLowerCase();
 
-	console.log("-- new user recovery", recoveryCodeBuffer, encryptedRecoveryCode);
 	const rows = await db.execute(sql`
 		INSERT INTO user (id, email, username, password_hash, recovery_code) VALUES (${id}, ${email}, ${username}, ${passwordHash}, ${sql.raw("x'" + recoveryCodeBuffer.toString("hex") + "'")})`);
 	const row = rows[0];
@@ -79,13 +78,14 @@ export async function getUserTOTPKey(userId: number): Uint8Array | null {
 	if ((row === null) | (row.length === 0)) {
 		throw new Error("Invalid user ID");
 	}
-	const encrypted = getArrayFromHex(row[0].totp_key_hex, 48);
+	const encryptedraw = getArrayFromHex(row[0].totp_key_hex, 52);
+	const encrypted = Buffer.from(encryptedraw);
+
 	if (encrypted === null) {
 		return null;
 	}
 	return decrypt(encrypted);
 }
-
 export async function updateUserTOTPKey(userId: number, key: Uint8Array): void {
 	const encrypted = encrypt(key);
 	const encryptedBuffer = Buffer.from(encrypted);
@@ -112,7 +112,6 @@ export async function getUserFromEmail(email: string): User | null {
 	if ((row === null) | (row.length === 0)) {
 		return null;
 	}
-	console.log("--userfromEmail ", row[0]);
 	const user: User = {
 		id: row[0].id,
 		email: row[0].email,

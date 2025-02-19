@@ -27,7 +27,6 @@ const rateLimitHandle: Handle = async ({ event, resolve }) => {
 };
 
 const authHandle: Handle = async ({ event, resolve }) => {
-	console.log("-- authHandle session", event.locals.session);
 	const token = event.cookies.get("session") ?? null;
 	if (token === null) {
 		event.locals.user = null;

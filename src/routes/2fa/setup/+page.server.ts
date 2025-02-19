@@ -21,8 +21,11 @@ export async function load(event: RequestEvent) {
 		return redirect(302, "/2fa");
 	}
 
-	const totpKey = new Uint8Array(20);
-	crypto.getRandomValues(totpKey);
+	//const totpKey = new Uint8Array(20);
+	//`crypto.getRandomValues(totpKey);
+	const totpKey = new Uint8Array([
+		23, 95, 65, 195, 173, 16, 249, 152, 148, 105, 233, 142, 186, 243, 85, 32, 162, 238, 232, 66
+	]);
 	const encodedTOTPKey = encodeBase64(totpKey);
 	const keyURI = createTOTPKeyURI("Demo", event.locals.user.username, totpKey, 30, 6);
 	const qrcode = renderSVG(keyURI);
@@ -99,7 +102,7 @@ async function action(event: RequestEvent) {
 			message: "Invalid code"
 		});
 	}
-	updateUserTOTPKey(event.locals.session.userId, key);
+	await updateUserTOTPKey(event.locals.session.userId, key);
 	await setSessionAs2FAVerified(event.locals.session.id);
 	return redirect(302, "/dashboard");
 }

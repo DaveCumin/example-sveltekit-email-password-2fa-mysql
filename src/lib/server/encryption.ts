@@ -26,6 +26,7 @@ export function decrypt(encrypted: Uint8Array): Uint8Array {
 	if (encrypted.byteLength < 33) {
 		throw new Error("Invalid data");
 	}
+
 	const decipher = createDecipheriv("aes-128-gcm", key, encrypted.slice(0, 16));
 	decipher.setAuthTag(encrypted.slice(encrypted.byteLength - 16));
 	const decrypted = new DynamicBuffer(0);

@@ -9,23 +9,30 @@ import type { RequestEvent } from "@sveltejs/kit";
 export async function validateSessionToken(token: string): SessionValidationResult {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 	const rows = await db.execute(sql`
-SELECT session.id, session.user_id, session.expires_at, session.two_factor_verified, user.id, user.email, user.username, user.email_verified, user.totp_key FROM session
+SELECT 
+    session.id AS session_id, 
+    session.user_id, 
+    session.expires_at, 
+    session.two_factor_verified, 
+    user.id AS user_id, 
+    user.email, 
+    user.username, 
+    user.email_verified, 
+    user.totp_key 
+FROM session
 INNER JOIN user ON session.user_id = user.id
-WHERE session.id = ${sessionId} 
+WHERE session.id = ${sessionId}
 `);
-
 	const row = rows[0];
 	if (row === null || row.length === 0) {
 		return { session: null, user: null };
 	}
 
-	console.log("--validating session", row[0]);
-
 	const session: Session = {
-		id: row[0].id,
+		id: row[0].session_id,
 		userId: row[0].user_id,
 		expiresAt: new Date(row[0].expires_at * 1000),
-		twoFactorVerified: Boolean(row[0].totp_key != null)
+		twoFactorVerified: Boolean(row[0].two_factor_verified)
 	};
 	const user: User = {
 		id: row[0].user_id,
