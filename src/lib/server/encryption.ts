@@ -37,3 +37,12 @@ export function decrypt(encrypted: Uint8Array): Uint8Array {
 export function decryptToString(data: Uint8Array): string {
 	return new TextDecoder().decode(decrypt(data));
 }
+
+export function getArrayFromHex(hex: string, length: number): Uint8Array {
+	return new Uint8Array(
+		hex
+			.replace("0x", "")
+			.match(/.{1,2}/g)
+			.map((byte) => parseInt(byte, 16))
+	).slice(0, length);
+}

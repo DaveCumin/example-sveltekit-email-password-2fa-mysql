@@ -3,8 +3,12 @@
 
 	import type { PageData, ActionData } from "./$types";
 
-	export let data: PageData;
-	export let form: ActionData;
+	interface Props {
+		data: PageData;
+		form: ActionData;
+	}
+
+	let { data, form }: Props = $props();
 </script>
 
 <header>
@@ -16,12 +20,6 @@
 	<section>
 		<h2>Update email</h2>
 		<p>Your email: {data.user.email}</p>
-		<form method="post" use:enhance action="?/email">
-			<label for="form-email.email">New email</label>
-			<input type="email" id="form-email.email" name="email" required /><br />
-			<button>Update</button>
-			<p>{form?.email?.message ?? ""}</p>
-		</form>
 	</section>
 	<section>
 		<h2>Update password</h2>
@@ -50,7 +48,6 @@
 		<section>
 			<h1>Recovery code</h1>
 			<p>Your recovery code is: {data.recoveryCode}</p>
-			<button>Generate new code</button>
 		</section>
 	{/if}
 </main>

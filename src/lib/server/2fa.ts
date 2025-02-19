@@ -17,16 +17,20 @@ export async function resetUser2FAWithRecoveryCode(userId: number, recoveryCode:
 	}
 	const encryptedRecoveryCode = row.recovery_code;
 	const userRecoveryCode = decryptToString(encryptedRecoveryCode);
+	const recoveryCodeBuffer = Buffer.from(encryptedRecoveryCode);
+
 	if (recoveryCode !== userRecoveryCode) {
 		return false;
 	}
 
 	const newRecoveryCode = generateRandomRecoveryCode();
 	const encryptedNewRecoveryCode = encryptString(newRecoveryCode);
+	const encryptedNewRecoveryCodeBuffer = Buffer.from(encryptedNewRecoveryCode);
+
 	await db.execute(sql`UPDATE session SET two_factor_verified = 0 WHERE user_id = ${userId}`);
 	// Compare old recovery code to ensure recovery code wasn't updated.
 	const result = await db.execute(
-		sql`UPDATE user SET recovery_code = '${encryptedNewRecoveryCode}', totp_key = NULL WHERE id = ${userId} AND recovery_code = ${encryptedRecoveryCode}`
+		sql`UPDATE user SET recovery_code = ${sql.raw("x'" + encryptedNewRecoveryCodeBuffer.toString("hex") + "'")}, totp_key = NULL WHERE id = ${userId} AND recovery_code = ${sql.raw("x'" + recoveryCodeBuffer.toString("hex") + "'")}`
 	);
 
 	return result.changes > 0;

@@ -39,8 +39,7 @@ export async function load(event: RequestEvent) {
 }
 
 export const actions: Actions = {
-	password: updatePasswordAction,
-	email: updateEmailAction
+	password: updatePasswordAction
 };
 
 async function updatePasswordAction(event: RequestEvent) {
@@ -117,71 +116,4 @@ async function updatePasswordAction(event: RequestEvent) {
 			message: "Updated password"
 		}
 	};
-}
-
-async function updateEmailAction(event: RequestEvent) {
-	if (event.locals.session === null || event.locals.user === null) {
-		return fail(401, {
-			email: {
-				message: "Not authenticated"
-			}
-		});
-	}
-	if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
-		return fail(403, {
-			email: {
-				message: "Forbidden"
-			}
-		});
-	}
-	if (!sendVerificationEmailBucket.check(event.locals.user.id, 1)) {
-		return fail(429, {
-			email: {
-				message: "Too many requests"
-			}
-		});
-	}
-
-	const formData = await event.request.formData();
-	const email = formData.get("email");
-	if (typeof email !== "string") {
-		return fail(400, {
-			email: {
-				message: "Invalid or missing fields"
-			}
-		});
-	}
-	if (email === "") {
-		return fail(400, {
-			email: {
-				message: "Please enter your email"
-			}
-		});
-	}
-	if (!verifyEmailInput(email)) {
-		return fail(400, {
-			email: {
-				message: "Please enter a valid email"
-			}
-		});
-	}
-	const emailAvailable = await checkEmailAvailability(email);
-	if (!emailAvailable) {
-		return fail(400, {
-			email: {
-				message: "This email is already used"
-			}
-		});
-	}
-	if (!sendVerificationEmailBucket.consume(event.locals.user.id, 1)) {
-		return fail(429, {
-			email: {
-				message: "Too many requests"
-			}
-		});
-	}
-	const verificationRequest = await createEmailVerificationRequest(event.locals.user.id, email);
-	sendVerificationEmail(verificationRequest.email, verificationRequest.code);
-	setEmailVerificationRequestCookie(event, verificationRequest);
-	return redirect(302, "/verify-email");
 }

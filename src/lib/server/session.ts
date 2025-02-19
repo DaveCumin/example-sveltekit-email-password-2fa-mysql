@@ -19,6 +19,8 @@ WHERE session.id = ${sessionId}
 		return { session: null, user: null };
 	}
 
+	console.log("--validating session", row[0]);
+
 	const session: Session = {
 		id: row[0].id,
 		userId: row[0].user_id,

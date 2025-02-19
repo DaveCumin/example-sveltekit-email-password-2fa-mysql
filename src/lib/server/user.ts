@@ -1,6 +1,6 @@
 import { db } from "$lib/server/db";
 import { is, sql } from "drizzle-orm";
-import { decrypt, decryptToString, encrypt, encryptString } from "./encryption";
+import { decrypt, decryptToString, encrypt, encryptString, getArrayFromHex } from "./encryption";
 import { hashPassword } from "./password";
 import { generateRandomRecoveryCode } from "./utils";
 import { encodeBase32 } from "@oslojs/encoding";
@@ -13,13 +13,15 @@ export async function createUser(email: string, username: string, password: stri
 	const passwordHash = await hashPassword(password);
 	const recoveryCode = generateRandomRecoveryCode();
 	const encryptedRecoveryCode = encryptString(recoveryCode);
+	const recoveryCodeBuffer = Buffer.from(encryptedRecoveryCode);
 
 	const idBytes = new Uint8Array(20);
 	crypto.getRandomValues(idBytes);
 	const id = encodeBase32(idBytes).toLowerCase();
 
+	console.log("-- new user recovery", recoveryCodeBuffer, encryptedRecoveryCode);
 	const rows = await db.execute(sql`
-		INSERT INTO user (id, email, username, password_hash, recovery_code) VALUES (${id}, ${email}, ${username}, ${passwordHash}, '${encryptedRecoveryCode}')`);
+		INSERT INTO user (id, email, username, password_hash, recovery_code) VALUES (${id}, ${email}, ${username}, ${passwordHash}, ${sql.raw("x'" + recoveryCodeBuffer.toString("hex") + "'")})`);
 	const row = rows[0];
 	if ((row === null) | (row.length === 0)) {
 		throw new Error("Unexpected error");
@@ -59,21 +61,25 @@ export async function getUserPasswordHash(userId: number): string {
 }
 
 export async function getUserRecoverCode(userId: number): string {
-	const rows = await db.execute(sql`SELECT recovery_code FROM user WHERE id = ${userId}`);
+	const rows = await db.execute(
+		sql`SELECT CONCAT('0x', HEX(recovery_code)) as recovery_code_hex  FROM user WHERE id = ${userId}`
+	);
 	const row = rows[0];
 	if ((row === null) | (row.length === 0)) {
 		throw new Error("Invalid user ID");
 	}
-	return decryptToString(row.bytes(0));
+	return decryptToString(getArrayFromHex(row[0].recovery_code_hex, 48));
 }
 
 export async function getUserTOTPKey(userId: number): Uint8Array | null {
-	const rows = await db.execute(sql`SELECT totp_key FROM user WHERE id = ${userId}`);
+	const rows = await db.execute(
+		sql`SELECT CONCAT('0x', HEX(totp_key)) as totp_key_hex  FROM user WHERE id = ${userId}`
+	);
 	const row = rows[0];
 	if ((row === null) | (row.length === 0)) {
 		throw new Error("Invalid user ID");
 	}
-	const encrypted = row.bytesNullable(0);
+	const encrypted = getArrayFromHex(row[0].totp_key_hex, 48);
 	if (encrypted === null) {
 		return null;
 	}
@@ -82,13 +88,20 @@ export async function getUserTOTPKey(userId: number): Uint8Array | null {
 
 export async function updateUserTOTPKey(userId: number, key: Uint8Array): void {
 	const encrypted = encrypt(key);
-	await db.execute(sql`UPDATE user SET totp_key = ${encrypted} WHERE id = ${userId}`);
+	const encryptedBuffer = Buffer.from(encrypted);
+	await db.execute(
+		sql`UPDATE user SET totp_key = ${sql.raw("x'" + encryptedBuffer.toString("hex") + "'")} WHERE id = ${userId}`
+	);
 }
 
 export async function resetUserRecoveryCode(userId: number): string {
 	const recoveryCode = generateRandomRecoveryCode();
 	const encrypted = encryptString(recoveryCode);
-	await db.execute(sql`UPDATE user SET recovery_code = ${encrypted} WHERE id = ${userId}`);
+	const encryptedBuffer = Buffer.from(encrypted);
+
+	await db.execute(
+		sql`UPDATE user SET recovery_code = ${sql.raw("x'" + encryptedBuffer.toString("hex") + "'")} WHERE id = ${userId}`
+	);
 	return recoveryCode;
 }
 
@@ -99,6 +112,7 @@ export async function getUserFromEmail(email: string): User | null {
 	if ((row === null) | (row.length === 0)) {
 		return null;
 	}
+	console.log("--userfromEmail ", row[0]);
 	const user: User = {
 		id: row[0].id,
 		email: row[0].email,
