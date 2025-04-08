@@ -9,6 +9,7 @@ import {
 import { RefillingTokenBucket } from "$lib/server/rate-limit";
 import { generateSessionToken } from "$lib/server/session";
 import { fail, redirect } from "@sveltejs/kit";
+import { base } from "$app/paths";
 
 import type { Actions, RequestEvent } from "./$types";
 
@@ -67,5 +68,5 @@ async function action(event: RequestEvent) {
 	const session = await createPasswordResetSession(sessionToken, user.id, user.email);
 	sendPasswordResetEmail(session.email, session.code);
 	setPasswordResetSessionTokenCookie(event, sessionToken, session.expiresAt);
-	return redirect(302, "/reset-password/verify-email");
+	return redirect(302, `${base}/reset-password/verify-email`);
 }

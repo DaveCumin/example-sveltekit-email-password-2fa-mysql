@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
+	import { base } from "$app/paths";
 
 	import type { ActionData } from "./$types";
 
@@ -19,4 +20,4 @@
 	<button>Verify</button>
 	<p>{form?.message ?? ""}</p>
 </form>
-<a href="/2fa/reset">Use recovery code</a>
+<a href={`${base}/2fa/reset`}>Use recovery code</a>

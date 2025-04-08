@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
+	import { base } from "$app/paths";
 
 	import type { PageData, ActionData } from "./$types";
 
@@ -12,8 +13,8 @@
 </script>
 
 <header>
-	<a href="/">Home</a>
-	<a href="/settings">Settings</a>
+	<a href={base}>Home</a>
+	<a href={`${base}/settings`}>Settings</a>
 </header>
 <main>
 	<h1>Settings</h1>
@@ -41,7 +42,7 @@
 	{#if data.user.registered2FA}
 		<section>
 			<h2>Update two-factor authentication</h2>
-			<a href="/2fa/setup">Update</a>
+			<a href={`${base}/2fa/setup`}>Update</a>
 		</section>
 	{/if}
 	{#if data.recoveryCode !== null}

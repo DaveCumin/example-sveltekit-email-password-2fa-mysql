@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
+	import { base } from "$app/paths";
 
 	import type { PageData } from "./$types";
 
@@ -11,8 +12,8 @@
 </script>
 
 <header>
-	<a href="/">Home</a>
-	<a href="/settings">Settings</a>
+	<a href={base}>Home</a>
+	<a href={`${base}/settings`}>Settings</a>
 </header>
 <main>
 	<h1>Hi {data.user.username}!</h1>

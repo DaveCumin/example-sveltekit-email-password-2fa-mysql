@@ -4,6 +4,7 @@ import { getUserFromEmail, getUserPasswordHash } from "$lib/server/user";
 import { RefillingTokenBucket, Throttler } from "$lib/server/rate-limit";
 import { verifyPasswordHash } from "$lib/server/password";
 import { createSession, generateSessionToken, setSessionTokenCookie } from "$lib/server/session";
+import { base } from "$app/paths";
 
 import type { SessionFlags } from "$lib/server/session";
 import type { Actions, PageServerLoadEvent, RequestEvent } from "./$types";
@@ -98,10 +99,10 @@ async function action(event: RequestEvent) {
 	setSessionTokenCookie(event, sessionToken, session.expiresAt);
 
 	if (!user.emailVerified) {
-		return redirect(302, "/verify-email");
+		return redirect(302, `${base}/verify-email`);
 	}
 	if (!user.registered2FA) {
-		return redirect(302, "/2fa/setup");
+		return redirect(302, `${base}/2fa/setup`);
 	}
-	return redirect(302, "/2fa");
+	return redirect(302, `${base}/2fa`);
 }

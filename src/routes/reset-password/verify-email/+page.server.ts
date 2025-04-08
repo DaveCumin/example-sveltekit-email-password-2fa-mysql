@@ -5,6 +5,7 @@ import {
 import { ExpiringTokenBucket } from "$lib/server/rate-limit";
 import { setUserAsEmailVerifiedIfEmailMatches } from "$lib/server/user";
 import { fail, redirect } from "@sveltejs/kit";
+import { base } from "$app/paths";
 
 import type { Actions, RequestEvent } from "./$types";
 
@@ -13,13 +14,13 @@ const bucket = new ExpiringTokenBucket<number>(5, 60 * 30);
 export async function load(event: RequestEvent) {
 	const { session } = await validatePasswordResetSessionRequest(event);
 	if (session === null) {
-		return redirect(302, "/forgot-password");
+		return redirect(302, `${base}/forgot-password`);
 	}
 	if (session.emailVerified) {
 		if (!session.twoFactorVerified) {
-			return redirect(302, "/reset-password/2fa");
+			return redirect(302, `${base}/reset-password/2fa`);
 		}
-		return redirect(302, "/reset-password");
+		return redirect(302, `${base}/reset-password`);
 	}
 	return {
 		email: session.email
@@ -76,5 +77,5 @@ async function action(event: RequestEvent) {
 			message: "Please restart the process"
 		});
 	}
-	return redirect(302, "/reset-password/2fa");
+	return redirect(302, `${base}/reset-password/2fa`);
 }

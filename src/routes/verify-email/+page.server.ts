@@ -11,6 +11,7 @@ import {
 import { invalidateUserPasswordResetSessions } from "$lib/server/password-reset";
 import { updateUserEmailAndSetEmailAsVerified } from "$lib/server/user";
 import { ExpiringTokenBucket } from "$lib/server/rate-limit";
+import { base } from "$app/paths";
 
 import type { Actions, RequestEvent } from "./$types";
 
@@ -117,7 +118,7 @@ async function verifyCode(event: RequestEvent) {
 	/*if (!event.locals.user.registered2FA) {
 		return redirect(302, "/2fa/setup");
 	}*/
-	return redirect(302, "/");
+	return redirect(302, base);
 }
 
 async function resendEmail(event: RequestEvent) {

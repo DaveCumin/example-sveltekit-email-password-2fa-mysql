@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
+	import { base } from "$app/paths";
 
 	import type { ActionData } from "./$types";
 
@@ -26,4 +27,4 @@
 	<button>Continue</button>
 	<p>{form?.message ?? ""}</p>
 </form>
-<a href="/forgot-password">Forgot password?</a>
+<a href={`${base}/forgot-password`}>Forgot password?</a>

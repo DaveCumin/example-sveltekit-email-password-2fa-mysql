@@ -12,6 +12,7 @@ import {
 	setSessionTokenCookie
 } from "$lib/server/session";
 import { updateUserPassword } from "$lib/server/user";
+import { base } from "$app/paths";
 
 import type { Actions, RequestEvent } from "./$types";
 import type { SessionFlags } from "$lib/server/session";
@@ -76,5 +77,5 @@ async function action(event: RequestEvent) {
 	const session = await createSession(sessionToken, user.id, sessionFlags);
 	setSessionTokenCookie(event, sessionToken, session.expiresAt);
 	deletePasswordResetSessionTokenCookie(event);
-	return redirect(302, "/");
+	return redirect(302, base);
 }

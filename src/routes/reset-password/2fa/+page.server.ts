@@ -12,16 +12,16 @@ export async function load(event: RequestEvent) {
 	const { session, user } = await validatePasswordResetSessionRequest(event);
 
 	if (session === null) {
-		return redirect(302, "/forgot-password");
+		return redirect(302, `${base}/forgot-password`);
 	}
 	if (!session.emailVerified) {
-		return redirect(302, "/reset-password/verify-email");
+		return redirect(302, `${base}/reset-password/verify-email`);
 	}
 	if (!user.registered2FA) {
-		return redirect(302, "/reset-password");
+		return redirect(302, `${base}/reset-password`);
 	}
 	if (session.twoFactorVerified) {
-		return redirect(302, "/reset-password");
+		return redirect(302, `${base}/reset-password`);
 	}
 	return {};
 }
@@ -155,5 +155,5 @@ async function recoveryCodeAction(event: RequestEvent) {
 		});
 	}
 	recoveryCodeBucket.reset(session.userId);
-	return redirect(302, "/reset-password");
+	return redirect(302, `${base}/reset-password`);
 }

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
+	import { base } from "$app/paths";
 
 	import type { ActionData, PageData } from "./$types";
 
@@ -23,4 +24,4 @@
 	<button>Resend code</button>
 	<p>{form?.resend?.message ?? ""}</p>
 </form>
-<a href="/settings">Change your email</a>
+<a href={`${base}/settings`}>Change your email</a>
