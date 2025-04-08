@@ -14,7 +14,7 @@ const config = {
 		adapter: adapter(),
 		prerender: { entries: ["*"] },
 		paths: {
-			base: "/base", // Update this to match your subdirectory
+			base: "/pct", // Update this to match your subdirectory (eg '/base')
 			relative: true
 		}
 	}
