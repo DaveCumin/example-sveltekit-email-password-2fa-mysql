@@ -32,6 +32,7 @@ async function action(event: RequestEvent) {
 
 	const formData = await event.request.formData();
 	const email = formData.get("email");
+	console.log(formData);
 	if (typeof email !== "string") {
 		return fail(400, {
 			message: "Invalid or missing fields",

@@ -6,7 +6,7 @@
 	import { Label } from "$lib/components/ui/label/index.js";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import { Checkbox } from "$lib/components/ui/checkbox/index.js";
-
+	import { toast } from "svelte-sonner";
 	import type { ActionData } from "./$types";
 	import { goto } from "$app/navigation";
 
@@ -24,7 +24,26 @@
 		<Card.Title class="mx-auto w-full text-center">Create an account</Card.Title>
 	</Card.Header>
 	<Card.Content>
-		<form method="post" use:enhance>
+		<form
+			method="post"
+			use:enhance={({ formElement, formData, action, cancel }) => {
+				return async ({ result }) => {
+					const loadingToast = toast.loading("Trying to sign you up...");
+					if (result.type === "redirect") {
+						toast.dismiss(loadingToast);
+						await goto(result.location, { invalidateAll: true });
+					}
+					if (result.type === "success") {
+						toast.dismiss(loadingToast);
+						await goto(`${base}/dashboard`, { invalidateAll: true });
+					}
+					if (result.type == "failure") {
+						toast.dismiss(loadingToast);
+						toast.error(result.data.message);
+					}
+				};
+			}}
+		>
 			<Label for="form-signup.username">Username</Label>
 			<Input
 				id="form-signup.username"
@@ -57,11 +76,10 @@
 					</Label>
 				</div>
 			</div>
+			<div class="mt-2 flex justify-between">
+				<Button type="submit">Continue</Button>
+				<Button variant="outline" onclick={() => goto(base)}>Cancel</Button>
+			</div>
 		</form>
 	</Card.Content>
-	<Card.Footer class="flex justify-between">
-		<Button type="submit">Continue</Button>
-		<Button variant="outline" onclick={() => goto(base)}>Cancel</Button>
-		<p>{form?.message ?? ""}</p>
-	</Card.Footer>
 </Card.Root>

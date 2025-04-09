@@ -27,5 +27,4 @@
 			<p>{form?.message ?? ""}</p>
 		</form>
 	</Card.Content>
-	<Card.Footer class="flex justify-between"></Card.Footer>
 </Card.Root>

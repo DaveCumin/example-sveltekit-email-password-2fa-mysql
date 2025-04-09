@@ -1,5 +1,8 @@
 <script lang="ts">
 	import "../app.css";
+	import { ModeWatcher } from "mode-watcher";
+	import { setMode, resetMode } from "mode-watcher";
+
 	interface Props {
 		children?: import("svelte").Snippet;
 	}
@@ -13,6 +16,11 @@
 	<title>PCT</title>
 </svelte:head>
 
-<Toaster />
+<ModeWatcher />
+<Toaster richColors class="z-999" />
+
+<button on:click={() => setMode("light")}>Light</button>
+<button on:click={() => setMode("dark")}>Dark</button>
+<button on:click={() => resetMode()}>System</button>
 
 {@render children?.()}

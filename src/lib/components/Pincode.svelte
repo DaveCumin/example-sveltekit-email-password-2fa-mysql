@@ -5,6 +5,8 @@
 	import { goto } from "$app/navigation";
 	import { base } from "$app/paths";
 	import { cn } from "$lib/utils.ts";
+	import { Button } from "$lib/components/ui/button";
+	import * as Card from "$lib/components/ui/card";
 
 	let { beforesnip = () => {}, informsnip = () => {}, heading, N = 6, cancelformact, submitformact } = $props();
 
@@ -36,66 +38,62 @@
 	onMount(() => {
 		document.getElementById(idtext + 0).focus();
 	});
-
-	let canceling = $state(false);
 </script>
 
-<div class="card" style="margin: 50px auto;">
-	<label>{heading}</label>
+<Card.Root class="mx-auto mt-10 w-[350px]">
+	<Card.Header>
+		<Card.Title class="mx-auto w-full text-center">{heading}</Card.Title>
+	</Card.Header>
+	<Card.Content>
+		{@render beforesnip()}
 
-	{@render beforesnip()}
-
-	<div id="inputs">
-		{#each inputs as id}
-			<input
-				id={idtext + id}
-				class={cn(
-					"h-10 rounded-md border border-input bg-background p-6 px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-				)}
-				type="text"
-				maxLength="1"
-				onkeydown={keypress}
-				onkeypress={(event) => event.preventDefault()}
-				bind:value={values[id]}
-			/>
-		{/each}
-	</div>
-
-	<form
-		method="POST"
-		use:enhance={({ formElement, formData, action, cancel }) => {
-			return async ({ result }) => {
-				const loadingToast = toast.loading("Verifying pin...");
-				if (canceling) {
-					toast.dismiss(loadingToast);
-				}
-				if (result.type === "redirect") {
-					toast.dismiss(loadingToast);
-					await goto(result.location, { invalidateAll: true });
-				}
-				if (result.type === "success") {
-					toast.dismiss(loadingToast);
-					await goto(`${base}/dashboard`, { invalidateAll: true });
-				}
-				if (result.type == "failure") {
-					toast.dismiss(loadingToast);
-					toast.error(result.data.message);
-				}
-			};
-		}}
-	>
-		{@render informsnip()}
-		<input type="hidden" name="code" bind:value={output} />
-		<div class="flex-row">
-			{#if cancelformact != ""}
-				<button id="pincancel" class="button-cancel" formaction={cancelformact}>Cancel</button>
-			{/if}
-			<button id="pinsubmit" class="button-submit" onclick={(canceling = true)} formaction={submitformact}
-				>Verify</button
-			>
+		<div id="inputs">
+			{#each inputs as id}
+				<input
+					id={idtext + id}
+					class={cn(
+						"h-10 rounded-md border border-input bg-background p-6 px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+					)}
+					type="text"
+					maxLength="1"
+					onkeydown={keypress}
+					onkeypress={(event) => event.preventDefault()}
+					bind:value={values[id]}
+				/>
+			{/each}
 		</div>
-	</form>
-</div>
+
+		<form
+			method="POST"
+			use:enhance={({ formElement, formData, action, cancel }) => {
+				return async ({ result }) => {
+					const loadingToast = toast.loading("Verifying pin...");
+					if (result.type === "redirect") {
+						toast.dismiss(loadingToast);
+						await goto(result.location, { invalidateAll: true });
+					}
+					if (result.type === "success") {
+						toast.dismiss(loadingToast);
+						await goto(`${base}/dashboard`, { invalidateAll: true });
+					}
+					if (result.type == "failure") {
+						toast.dismiss(loadingToast);
+						toast.error(result.data.message);
+					}
+				};
+			}}
+		>
+			{@render informsnip()}
+			<input type="hidden" name="code" bind:value={output} />
+			<div class="mt-2 flex justify-between">
+				<Button type="submit" id="pinsubmit" formaction={submitformact}>Verify</Button>
+				{#if cancelformact != ""}
+					<Button variant="outline" id="pincancel" type="submit" formaction={cancelformact}>Cancel</Button>
+				{/if}
+			</div>
+		</form>
+	</Card.Content>
+</Card.Root>
 
 <style>
 	.card {
@@ -115,6 +113,11 @@
 	form {
 		width: 100%;
 	}
+
+	#inputs {
+		display: flex;
+		justify-content: center;
+	}
 	input {
 		width: 2.5em;
 		height: 2.5em;
@@ -127,47 +130,5 @@
 	input:focus {
 		border: 1.5px solid #acacac;
 		outline: none;
-	}
-
-	.button-submit {
-		margin: 12px 0 10px 0;
-		background-color: #151717;
-		border: none;
-		color: white;
-		font-size: 15px;
-		font-weight: 500;
-		border-radius: 8px;
-		height: 3em;
-		width: 100%;
-		cursor: pointer;
-	}
-	.button-submit:focus {
-		border: 1.5px solid #acacac;
-	}
-
-	.button-cancel {
-		margin: 12px 0 10px 0;
-		background-color: white;
-		border: 1.5px solid #ecedec;
-		color: #151717;
-		font-size: 15px;
-		font-weight: 500;
-		border-radius: 8px;
-		height: 3em;
-		width: 100%;
-		cursor: pointer;
-	}
-	.button-cancel:focus {
-		border: 1.5px solid #acacac;
-	}
-	.button-cancel:hover,
-	.button-submit:hover {
-		filter: opacity(0.8);
-	}
-
-	.flex-row {
-		display: flex;
-		gap: 10px;
-		justify-content: center;
 	}
 </style>

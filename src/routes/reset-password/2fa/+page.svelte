@@ -5,7 +5,10 @@
 	import { Label } from "$lib/components/ui/label/index.js";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import type { ActionData } from "./$types";
-
+	import { base } from "$app/paths";
+	import { toast } from "svelte-sonner";
+	import { goto } from "$app/navigation";
+	import Pincode from "$lib/components/Pincode.svelte";
 	interface Props {
 		form: ActionData;
 	}
@@ -13,20 +16,37 @@
 	let { form }: Props = $props();
 </script>
 
-<h1>Two-factor authentication</h1>
-<p>Enter the code from your authenticator app.</p>
-<form method="post" use:enhance action="?/totp">
-	<Label for="form-totp.code">Code</Label>
-	<Input id="form-totp.code" name="code" required /><br />
-	<Button type="submit">Verify code</Button>
-	<p>{form?.totp?.message ?? ""}</p>
-</form>
-<section>
-	<h2>Use your recovery code instead</h2>
-	<form method="post" use:enhance action="?/recovery_code">
-		<Label for="form-recovery-code.code">Recovery code</Label>
-		<Input id="form-recovery-code.code" name="code" required /><br />
-		<Button type="submit">Verify code</Button>
-		<p>{form?.recoveryCode?.message ?? ""}</p>
-	</form>
-</section>
+<Pincode heading="Two-factor authentication" cancelformact="?/signout" submitformact="?/totp" />
+
+<Card.Root class="mx-auto mt-10 w-[350px]">
+	<Card.Header>
+		<Card.Description>Use your recovery code instead</Card.Description>
+	</Card.Header>
+	<Card.Content>
+		<form
+			method="post"
+			use:enhance={({ formElement, formData, action, cancel }) => {
+				return async ({ result }) => {
+					const loadingToast = toast.loading("Verifying pin...");
+					if (result.type === "redirect") {
+						toast.dismiss(loadingToast);
+						await goto(result.location, { invalidateAll: true });
+					}
+					if (result.type === "success") {
+						toast.dismiss(loadingToast);
+						await goto(`${base}/dashboard`, { invalidateAll: true });
+					}
+					if (result.type == "failure") {
+						toast.dismiss(loadingToast);
+						toast.error(result.data.message);
+					}
+				};
+			}}
+			action="?/recovery_code"
+		>
+			<Label for="form-recovery-code.code">Recovery code</Label>
+			<Input id="form-recovery-code.code" name="code" required /><br />
+			<Button type="submit">Verify recovery code</Button>
+		</form>
+	</Card.Content>
+</Card.Root>
