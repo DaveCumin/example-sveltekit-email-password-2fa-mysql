@@ -29,7 +29,7 @@ export const actions: Actions = {
 async function signout(event: RequestEvent) {
 	await invalidateSession(event.locals.session.id);
 	deleteSessionTokenCookie(event);
-	return redirect(302, `${base}/login`);
+	return redirect(302, `${base}/`);
 }
 
 async function verify(event: RequestEvent) {

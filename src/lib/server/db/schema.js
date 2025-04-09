@@ -51,7 +51,7 @@ export const userlog = mysqlTable("user_log", {
 	id: varchar("id", { length: 255 }).notNull().primaryKey(),
 	userId: varchar("user_id", { length: 255 })
 		.notNull()
-		.references(() => user.id, { onDelete: "cascade" }),
+		.references(() => user.id),
 	event: varchar("event", { length: 255 }).notNull(),
 	eventtime: bigint("eventtime", { mode: "number" }).notNull()
 });

@@ -12,7 +12,7 @@ export async function load(event: RequestEvent) {
 	const { session, user } = await validatePasswordResetSessionRequest(event);
 
 	if (session === null) {
-		return redirect(302, `${base}/forgot-password`);
+		return redirect(302, `${base}/fauth/orgot-password`);
 	}
 	if (!session.emailVerified) {
 		return redirect(302, `${base}/reset-password/verify-email`);

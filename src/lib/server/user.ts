@@ -10,9 +10,9 @@ async function logEvent(userid, event) {
 		const idBytes = new Uint8Array(20);
 		crypto.getRandomValues(idBytes);
 		const id = encodeBase32(idBytes).toLowerCase();
-		const time = new Date(Date.now());
+		const time = Number(new Date(Date.now()));
 		const rows = await db.execute(sql`
-			INSERT INTO user_log (id, user_id, event, time) VALUES (${id}, ${userid}, ${event}, ${time} )`);
+			INSERT INTO user_log (id, user_id, event, eventtime) VALUES (${id}, ${userid}, ${event}, ${time} )`);
 	} catch (e) {
 		console.error(e);
 	}

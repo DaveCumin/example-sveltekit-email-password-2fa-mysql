@@ -23,6 +23,7 @@
 	<Card.Content>
 		<form
 			method="post"
+			action={`${base}/login/`}
 			use:enhance={({ formElement, formData, action, cancel }) => {
 				const loadingToast = toast.loading("Verifying credentials...");
 				return async ({ result }) => {

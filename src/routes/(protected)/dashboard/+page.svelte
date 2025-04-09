@@ -13,10 +13,6 @@
 	let { data }: Props = $props();
 </script>
 
-<header>
-	<a href={`${base}/`}>Home</a>
-	<a href={`${base}/settings`}>Settings</a>
-</header>
 <main>
 	<h1>Hi {data.user.username}! Welcome to your dashboard.</h1>
 	<form

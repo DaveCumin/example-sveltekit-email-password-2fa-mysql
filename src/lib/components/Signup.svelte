@@ -26,6 +26,7 @@
 	<Card.Content>
 		<form
 			method="post"
+			action={`${base}/signup`}
 			use:enhance={({ formElement, formData, action, cancel }) => {
 				return async ({ result }) => {
 					const loadingToast = toast.loading("Trying to sign you up...");

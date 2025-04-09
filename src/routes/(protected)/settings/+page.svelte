@@ -1,6 +1,13 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import { base } from "$app/paths";
+	import * as Card from "$lib/components/ui/card/index.js";
+	import { Input } from "$lib/components/ui/input/index.js";
+	import { Label } from "$lib/components/ui/label/index.js";
+	import { Button } from "$lib/components/ui/button/index.js";
+	import { Checkbox } from "$lib/components/ui/checkbox/index.js";
+	import { toast } from "svelte-sonner";
+	import { goto } from "$app/navigation";
 
 	import type { PageData, ActionData } from "./$types";
 
@@ -10,39 +17,35 @@
 	}
 
 	let { data, form }: Props = $props();
+
+	function updateAuth() {
+		goto(`${base}/2fa/setup`);
+	}
 </script>
 
-<header>
-	<a href={base}>Home</a>
-	<a href={`${base}/settings`}>Settings</a>
-</header>
 <main>
 	<h1>Settings</h1>
 	<section>
-		<h2>Update email</h2>
-		<p>Your email: {data.user.email}</p>
-	</section>
-	<section>
 		<h2>Update password</h2>
 		<form method="post" use:enhance action="?/password">
-			<label for="form-password.password">Current password</label>
-			<input type="password" id="form-email.password" name="password" autocomplete="current-password" required /><br />
-			<label for="form-password.new-password">New password</label>
-			<input
+			<Label for="form-password.password">Current password</Label>
+			<Input type="password" id="form-email.password" name="password" autocomplete="current-password" required /><br />
+			<Label for="form-password.new-password">New password</Label>
+			<Input
 				type="password"
 				id="form-password.new-password"
 				name="new_password"
 				autocomplete="new-password"
 				required
 			/><br />
-			<button>Update</button>
+			<Button type="submit">Update</Button>
 			<p>{form?.password?.message ?? ""}</p>
 		</form>
 	</section>
 	{#if data.user.registered2FA}
 		<section>
 			<h2>Update two-factor authentication</h2>
-			<a href={`${base}/2fa/setup`}>Update</a>
+			<Button onclick={updateAuth}>Update</Button>
 		</section>
 	{/if}
 	{#if data.recoveryCode !== null}

@@ -11,10 +11,6 @@
 	let { data }: Props = $props();
 </script>
 
-<header>
-	<a href={base}>Home</a>
-	<a href={`${base}/settings`}>Settings</a>
-</header>
 <main>
 	<h1>Hi {data.user.username}!</h1>
 	<form method="post" use:enhance>
