@@ -5,6 +5,19 @@ import { hashPassword } from "./password";
 import { generateRandomRecoveryCode } from "./utils";
 import { encodeBase32 } from "@oslojs/encoding";
 
+async function logEvent(userid, event) {
+	try {
+		const idBytes = new Uint8Array(20);
+		crypto.getRandomValues(idBytes);
+		const id = encodeBase32(idBytes).toLowerCase();
+		const time = new Date(Date.now());
+		const rows = await db.execute(sql`
+			INSERT INTO user_log (id, user_id, event, time) VALUES (${id}, ${userid}, ${event}, ${time} )`);
+	} catch (e) {
+		console.error(e);
+	}
+}
+
 export function verifyUsernameInput(username: string): boolean {
 	return username.length > 3 && username.length < 32 && username.trim() === username;
 }
@@ -25,6 +38,7 @@ export async function createUser(email: string, username: string, password: stri
 	if ((row === null) | (row.length === 0)) {
 		throw new Error("Unexpected error");
 	}
+	logEvent(id, "createdUser");
 	const user: User = {
 		id: id,
 		username,
@@ -35,21 +49,21 @@ export async function createUser(email: string, username: string, password: stri
 	return user;
 }
 
-export async function updateUserPassword(userId: number, password: string): Promise<void> {
+export async function updateUserPassword(userId: string, password: string): Promise<void> {
 	const passwordHash = await hashPassword(password);
 	await db.execute(sql`UPDATE user SET password_hash = ${passwordHash} WHERE id = ${userId}`);
 }
 
-export async function updateUserEmailAndSetEmailAsVerified(userId: number, email: string): void {
+export async function updateUserEmailAndSetEmailAsVerified(userId: string, email: string): void {
 	await db.execute(sql`UPDATE user SET email = ${email}, email_verified = 1 WHERE id = ${userId}`);
 }
 
-export async function setUserAsEmailVerifiedIfEmailMatches(userId: number, email: string): boolean {
+export async function setUserAsEmailVerifiedIfEmailMatches(userId: string, email: string): boolean {
 	const result = await db.execute(sql`UPDATE user SET email_verified = 1 WHERE id = ${userId} AND email = ${email}`);
 	return result[0].affectedRows > 0;
 }
 
-export async function getUserPasswordHash(userId: number): string {
+export async function getUserPasswordHash(userId: string): string {
 	const rows = await db.execute(sql`SELECT password_hash FROM user WHERE id = ${userId}`);
 	const row = rows[0];
 	if ((row === null) | (row.length === 0)) {
@@ -59,7 +73,7 @@ export async function getUserPasswordHash(userId: number): string {
 	return row[0].password_hash;
 }
 
-export async function getUserRecoverCode(userId: number): string {
+export async function getUserRecoverCode(userId: string): string {
 	const rows = await db.execute(
 		sql`SELECT CONCAT('0x', HEX(recovery_code)) as recovery_code_hex  FROM user WHERE id = ${userId}`
 	);
@@ -70,7 +84,7 @@ export async function getUserRecoverCode(userId: number): string {
 	return decryptToString(getArrayFromHex(row[0].recovery_code_hex, 48));
 }
 
-export async function getUserTOTPKey(userId: number): Uint8Array | null {
+export async function getUserTOTPKey(userId: string): Uint8Array | null {
 	const rows = await db.execute(
 		sql`SELECT CONCAT('0x', HEX(totp_key)) as totp_key_hex  FROM user WHERE id = ${userId}`
 	);
@@ -86,7 +100,7 @@ export async function getUserTOTPKey(userId: number): Uint8Array | null {
 	}
 	return decrypt(encrypted);
 }
-export async function updateUserTOTPKey(userId: number, key: Uint8Array): void {
+export async function updateUserTOTPKey(userId: string, key: Uint8Array): void {
 	const encrypted = encrypt(key);
 	const encryptedBuffer = Buffer.from(encrypted);
 	await db.execute(
@@ -94,7 +108,7 @@ export async function updateUserTOTPKey(userId: number, key: Uint8Array): void {
 	);
 }
 
-export async function resetUserRecoveryCode(userId: number): string {
+export async function resetUserRecoveryCode(userId: string): string {
 	const recoveryCode = generateRandomRecoveryCode();
 	const encrypted = encryptString(recoveryCode);
 	const encryptedBuffer = Buffer.from(encrypted);
@@ -123,7 +137,7 @@ export async function getUserFromEmail(email: string): User | null {
 }
 
 export interface User {
-	id: number;
+	id: string;
 	email: string;
 	username: string;
 	emailVerified: boolean;

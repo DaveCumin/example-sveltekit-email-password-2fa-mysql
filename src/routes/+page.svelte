@@ -18,6 +18,6 @@
 <main>
 	<h1>Hi {data.user.username}!</h1>
 	<form method="post" use:enhance>
-		<Button>Sign out</Button>
+		<Button type="submit">Sign out</Button>
 	</form>
 </main>

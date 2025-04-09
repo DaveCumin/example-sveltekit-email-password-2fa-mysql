@@ -49,7 +49,7 @@ export async function validatePasswordResetSessionToken(token: string): Password
 	if ((row === null) | (row.length === 0)) {
 		return { session: null, user: null };
 	}
-	console.log(row);
+
 	const session: PasswordResetSession = {
 		id: row[0].session_id,
 		userId: row[0].user_id,

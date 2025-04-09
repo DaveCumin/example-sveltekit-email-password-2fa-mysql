@@ -79,7 +79,7 @@ async function totpAction(event: RequestEvent) {
 	}
 	totpBucket.reset(session.userId);
 	await setPasswordResetSessionAs2FAVerified(session.id);
-	return redirect(302, "/reset-password");
+	return redirect(302, `${base}/reset-password`);
 }
 
 async function recoveryCodeAction(event: RequestEvent) {

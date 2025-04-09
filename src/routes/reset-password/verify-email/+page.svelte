@@ -23,7 +23,7 @@
 		<form method="post" use:enhance>
 			<Label for="form-verify.code">Code</Label>
 			<Input id="form-verify.code" name="code" required />
-			<Button variant="outline" type="submit">Verify</Button>
+			<Button class="mt-2" type="submit">Verify</Button>
 			<p>{form?.message ?? ""}</p>
 		</form>
 	</Card.Content>

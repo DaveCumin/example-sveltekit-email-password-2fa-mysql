@@ -5,6 +5,7 @@ import { updateUserTOTPKey } from "$lib/server/user";
 import { setSessionAs2FAVerified } from "$lib/server/session";
 import { RefillingTokenBucket } from "$lib/server/rate-limit";
 import { renderSVG } from "uqr";
+import { base } from "$app/paths";
 
 import type { Actions, RequestEvent } from "./$types";
 
@@ -12,20 +13,17 @@ const totpUpdateBucket = new RefillingTokenBucket<number>(3, 60 * 10);
 
 export async function load(event: RequestEvent) {
 	if (event.locals.session === null || event.locals.user === null) {
-		return redirect(302, "/login");
+		return redirect(302, `${base}/login`);
 	}
 	if (!event.locals.user.emailVerified) {
-		return redirect(302, "/verify-email");
+		return redirect(302, `${base}/verify-email`);
 	}
 	if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
-		return redirect(302, "/2fa");
+		return redirect(302, `${base}/2fa`);
 	}
 
-	//const totpKey = new Uint8Array(20);
-	//`crypto.getRandomValues(totpKey);
-	const totpKey = new Uint8Array([
-		23, 95, 65, 195, 173, 16, 249, 152, 148, 105, 233, 142, 186, 243, 85, 32, 162, 238, 232, 66
-	]);
+	const totpKey = new Uint8Array(20);
+	crypto.getRandomValues(totpKey);
 	const encodedTOTPKey = encodeBase64(totpKey);
 	const keyURI = createTOTPKeyURI("Demo", event.locals.user.username, totpKey, 30, 6);
 	const qrcode = renderSVG(keyURI);
@@ -104,5 +102,5 @@ async function action(event: RequestEvent) {
 	}
 	await updateUserTOTPKey(event.locals.session.userId, key);
 	await setSessionAs2FAVerified(event.locals.session.id);
-	return redirect(302, "/dashboard");
+	return redirect(302, `${base}/dashboard`);
 }

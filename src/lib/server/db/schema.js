@@ -46,3 +46,12 @@ export const passwordResetSession = mysqlTable("password_reset_session", {
 	emailVerified: int("email_verified").notNull().default(0),
 	twoFactorVerified: int("two_factor_verified").notNull().default(0)
 });
+
+export const userlog = mysqlTable("user_log", {
+	id: varchar("id", { length: 255 }).notNull().primaryKey(),
+	userId: varchar("user_id", { length: 255 })
+		.notNull()
+		.references(() => user.id, { onDelete: "cascade" }),
+	event: varchar("event", { length: 255 }).notNull(),
+	eventtime: bigint("eventtime", { mode: "number" }).notNull()
+});

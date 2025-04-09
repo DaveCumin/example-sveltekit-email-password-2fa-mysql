@@ -33,6 +33,8 @@ async function action(event: RequestEvent) {
 		});
 	}
 	await invalidateSession(event.locals.session.id);
+
 	deleteSessionTokenCookie(event);
+
 	return redirect(302, `${base}/login`);
 }

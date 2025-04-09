@@ -63,8 +63,7 @@ async function verify(event: RequestEvent) {
 			message: "Too many requests"
 		});
 	}
-	console.log(event.locals.user.id);
-	console.log(typeof event.locals.user.id);
+
 	const totpKey = await getUserTOTPKey(event.locals.user.id);
 
 	if (totpKey === null) {

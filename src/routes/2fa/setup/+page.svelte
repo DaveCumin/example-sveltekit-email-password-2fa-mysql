@@ -19,11 +19,11 @@
 		<Card.Title class="mx-auto w-full text-center">Set up two-factor authentication</Card.Title>
 	</Card.Header>
 	<Card.Content>
-		<div style="width:200px; height: 200px;">
+		<div style="width:200px; height: 200px; margin:auto;">
 			{@html data.qrcode}
 		</div>
 		<form method="post" use:enhance>
-			<Input name="key" value={data.encodedTOTPKey} hidden required />
+			<input name="key" value={data.encodedTOTPKey} hidden required />
 			<Label for="form-totp.code">Verify the code from the app</Label>
 			<Input id="form-totp.code" name="code" required /><br />
 			<Button type="submit">Save</Button>
