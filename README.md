@@ -2,7 +2,7 @@
 
 Built with MySQL (as opposed to the sqlite version at https://github.com/lucia-auth/example-sveltekit-email-password-2fa).
 
-Migrated to Sevlte 5.
+Migrated to Sevlte 5, and better UI with shadcn-svelte (https://next.shadcn-svelte.com/).
 
 - Password check with HaveIBeenPwned
 - Email verification
