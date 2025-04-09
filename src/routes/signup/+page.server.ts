@@ -51,6 +51,15 @@ async function action(event: RequestEvent) {
 	const email = formData.get("email");
 	const username = formData.get("username");
 	const password = formData.get("password");
+
+	if (formData.get("acceptTerms") == "false") {
+		return fail(400, {
+			message: "You must accept the terms and conditions in order to sign up.",
+			email: "",
+			username: ""
+		});
+	}
+
 	if (typeof email !== "string" || typeof username !== "string" || typeof password !== "string") {
 		return fail(400, {
 			message: "Invalid or missing fields",

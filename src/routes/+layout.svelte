@@ -1,13 +1,18 @@
 <script lang="ts">
+	import "../app.css";
 	interface Props {
-		children?: import('svelte').Snippet;
+		children?: import("svelte").Snippet;
 	}
+
+	import { Toaster } from "$lib/components/ui/sonner/index.js";
 
 	let { children }: Props = $props();
 </script>
 
 <svelte:head>
-	<title>Email and password example with 2FA in SvelteKit</title>
+	<title>PCT</title>
 </svelte:head>
+
+<Toaster />
 
 {@render children?.()}

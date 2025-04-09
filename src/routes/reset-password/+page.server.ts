@@ -25,9 +25,9 @@ export async function load(event: RequestEvent) {
 	if (!session.emailVerified) {
 		return redirect(302, "/reset-password/verify-email");
 	}
-	/*if (user.registered2FA && !session.twoFactorVerified) {
+	if (user.registered2FA && !session.twoFactorVerified) {
 		return redirect(302, "/reset-password/2fa");
-	}*/
+	}
 	return {};
 }
 

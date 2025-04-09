@@ -29,10 +29,10 @@ const throttler = new Throttler<number>([0, 1, 2, 4, 8, 16, 30, 60, 180, 300]);
 const ipBucket = new RefillingTokenBucket<string>(20, 1);
 
 export const actions: Actions = {
-	default: action
+	login: login
 };
 
-async function action(event: RequestEvent) {
+async function login(event: RequestEvent) {
 	// TODO: Assumes X-Forwarded-For is always included.
 	const clientIP = event.request.headers.get("X-Forwarded-For");
 	if (clientIP !== null && !ipBucket.check(clientIP, 1)) {

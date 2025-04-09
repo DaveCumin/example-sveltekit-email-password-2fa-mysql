@@ -17,12 +17,12 @@ import type { Actions, RequestEvent } from "./$types";
 
 export async function load(event: RequestEvent) {
 	if (event.locals.user === null) {
-		return redirect(302, "/login");
+		return redirect(302, `${base}/login`);
 	}
 	let verificationRequest = await getUserEmailVerificationRequestFromRequest(event);
 	if (verificationRequest === null || Date.now() >= verificationRequest.expiresAt.getTime()) {
 		if (event.locals.user.emailVerified) {
-			return redirect(302, "/");
+			return redirect(302, `${base}/`);
 		}
 		// Note: We don't need rate limiting since it takes time before requests expire
 		verificationRequest = await createEmailVerificationRequest(event.locals.user.id, event.locals.user.email);
